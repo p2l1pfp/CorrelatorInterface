@@ -23,10 +23,24 @@ def main(args):
 
     if not os.path.exists('CMSSW_9_2_0'):
         print('Checking out and compiling CMSSW_9_2_0')
-        pwd = os.environ['PWD']
-        exec_me('ls', args.dryRun)
         exec_me('./compile.sh', args.dryRun)
-        
+
+    if not os.path.isfile('barrel_sectors_%sx%s_TTbar_PU140.dump'%(args.neta, args.nphi)):
+        exec_me('cd CMSSW_9_2_0/src/; ' + \
+                    'eval `scram runtime -sh`; ' + \
+                    'cd -; ' + \
+                    'cmsRun runRespNTupler.py neta=%s nphi=%s'%(args.neta, args.nphi), args.dryRun)
+    
+    if not os.path.exists('GlobalCorrelator_HLS'):
+        print('Checking out GlobalCorrelator_HLS')
+        exec_me('git clone git://github.com/p2l1pfp/GlobalCorrelator_HLS.git', args.dryRun)
+
+    exec_me('cp barrel_sectors_%sx%s_TTbar_PU140.dump GlobalCorrelator_HLS/regionizer/data/'%(args.neta, args.nphi), args.dryRun)
+
+    if not args.dryRun: os.chdir('GlobalCorrelator_HLS/regionizer')
+
+    exec_me('. /home/jduarte1/setup_vivado.sh; ' + \
+                'vivado_hls -f run_hls_regionizer.tcl', args.dryRun)    
         
 
 if __name__ == "__main__":
