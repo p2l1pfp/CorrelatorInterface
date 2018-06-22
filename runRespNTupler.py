@@ -1,4 +1,27 @@
 import FWCore.ParameterSet.Config as cms
+import FWCore.ParameterSet.VarParsing as VarParsing
+
+options = VarParsing.VarParsing ('analysis')
+
+# setup any defaults you want
+#options.outputFile = '/uscms/home/cplager/nobackup/outputFiles/try_3.root'
+#options.inputFiles= 'file1.root', 'file2.root'
+#options.maxEvents = -1 # -1 means all events
+
+options.register ('neta',
+                  1, # default value
+                  VarParsing.VarParsing.multiplicity.singleton, # singleton or list
+                  VarParsing.VarParsing.varType.int,          # string, int, or float
+                  "number of eta bins for regionizer")
+
+options.register ('nphi',
+                  12, # default value
+                  VarParsing.VarParsing.multiplicity.singleton, # singleton or list
+                  VarParsing.VarParsing.varType.int,          # string, int, or float
+                  "number of phi bins for regionizer")
+
+# get and parse the command line arguments
+options.parseArguments()
 
 process = cms.Process("RESP")
 
@@ -172,9 +195,9 @@ if False: # prepare dump file for Vivado (PF IP core)
     process.InfoOut.useRelativeRegionalCoordinates = cms.bool(True)
     process.InfoOut.regionDumpFileName = cms.untracked.string("regions_TTbar_PU140.dump")
     process.source.fileNames = ['file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job1.root'] #, 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job2.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job3.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job4.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job5.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job6.root', ]
-if False: # prepare dump file for Vivado (Regionizer)
-    gbr(1,12,0,0,"atCalo")
-    process.InfoOut.regionDumpFileName = cms.untracked.string("barrel_sectors_1x12_TTbar_PU140.dump")
+if True: # prepare dump file for Vivado (Regionizer)
+    gbr(options.neta,options.nphi,0,0,"atCalo")
+    process.InfoOut.regionDumpFileName = cms.untracked.string("barrel_sectors_%sx%s_TTbar_PU140.dump"%(options.neta,options.nphi))
     process.source.fileNames = ['file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job1.root'] #, 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job2.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job3.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job4.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job5.root', 'file:/eos/cms/store/cmst3/user/jngadiub/L1PFInputs/TTbar_PU140/inputs_17D_TTbar_PU140_job6.root', ]
 if False: # prepare dump file for Vivado (Vertexing)
     gbrExt(12,"atCalo")
