@@ -85,12 +85,27 @@ void DylanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJ
     for( int j=i; j < IN_OBJECT_COUNT; ++j)
       {
 #pragma HLS UNROLL
-	ap_int<K> tmppt = data_tmp[j];
+	ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
 	if(tmppt > max) 
 	  { max = tmppt; maxj = j; }
       }
     data_out[i] = data_tmp[maxj];
     data_tmp[maxj] = data_tmp[i];
+  }
+}
+
+void NhanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
+{
+#pragma HLS PIPELINE II=1
+  int i=0;
+  for( int j=0; j < IN_OBJECT_COUNT; ++j) {
+#pragma HLS UNROLL
+    ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
+    if (tmppt > 0) {
+      data_out[i] = data_tmp[j];
+      i++;
+    }
+    if (i>OUT_OBJECT_COUNT) break;  
   }
 }
 
@@ -121,13 +136,14 @@ void L2sort(ap_uint<M> data_in[NLINKS][NOBJ_PER_LINK], ap_uint<M> data_out[OUT_O
       data_tmp[i] = 0;
     }
 
-    BitonicSortOptimizedInline(data_tmp);
+    /*BitonicSortOptimizedInline(data_tmp);
 
     for ( int i=0; i < OUT_OBJECT_COUNT; ++i) {
 #pragma HLS UNROLL
       data_out[i] = data_tmp[INPUT_SORT_SIZE-i-1];
-    }
+      }*/
 
     //DylanSort(data_tmp, data_out);
+    NhanSort(data_tmp, data_out);
 
 }

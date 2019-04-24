@@ -1,4 +1,4 @@
-open_project -reset proj_II1_obj180
+open_project -reset proj_II1_obj180_nhansort
 
 #set nLinks 8 
 #set nObjPerLink 16 
