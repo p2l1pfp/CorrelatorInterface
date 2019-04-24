@@ -34,7 +34,7 @@ void BitonicSortOptimizedInline(ap_uint<M> work_array[INPUT_SORT_SIZE]) {
     // HLS csynth says it can't meeting timing requirements if II<5 for N=32
     // HLS csynth says it can't meeting timing requirements if II<7 for N=64
     // HLS csynth says it can't meeting timing requirements if II<10 for N=128
-    #pragma HLS PIPELINE II=10
+    #pragma HLS PIPELINE II=1
     #pragma HLS ARRAY_PARTITION variable=work_array complete
     int j = 0;
 
@@ -103,7 +103,7 @@ void L2sort(ap_uint<M> data_in[NLINKS][NOBJ_PER_LINK], ap_uint<M> data_out[OUT_O
 
 #pragma HLS ARRAY_PARTITION variable=data_in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=data_out complete dim=0
-  //#pragma HLS PIPELINE II=20
+#pragma HLS PIPELINE II=1
   //#pragma HLS LATENCY min=19 max=19
 
     ap_uint<M> data_tmp[INPUT_SORT_SIZE];

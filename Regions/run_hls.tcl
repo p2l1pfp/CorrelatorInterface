@@ -1,13 +1,13 @@
-open_project -reset proj
+open_project -reset proj_II1_obj180
 
-set nLinks 8 
-set nObjPerLink 16 
-set inObjectCount 128
-set inputSortSize 128 
-#set nLinks 10 
-#set nObjPerLink 18
-#set inObjectCount 180
-#set inputSortSize 256
+#set nLinks 8 
+#set nObjPerLink 16 
+#set inObjectCount 128
+#set inputSortSize 128 
+set nLinks 10 
+set nObjPerLink 18
+set inObjectCount 180
+set inputSortSize 256
 set outObjectCount 30
 
 set_top L2sort
@@ -22,7 +22,7 @@ create_clock -period 320MHz -name default
 
 csim_design
 csynth_design
-#cosim_design
-#export_design
+cosim_design
+export_design
 
 quit
