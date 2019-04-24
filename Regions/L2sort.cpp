@@ -34,7 +34,7 @@ void BitonicSortOptimizedInline(ap_uint<M> work_array[INPUT_SORT_SIZE]) {
     // HLS csynth says it can't meeting timing requirements if II<5 for N=32
     // HLS csynth says it can't meeting timing requirements if II<7 for N=64
     // HLS csynth says it can't meeting timing requirements if II<10 for N=128
-    #pragma HLS PIPELINE II=20
+    #pragma HLS PIPELINE II=10
     #pragma HLS ARRAY_PARTITION variable=work_array complete
     int j = 0;
 
@@ -78,6 +78,7 @@ void BitonicSortOptimizedInline(ap_uint<M> work_array[INPUT_SORT_SIZE]) {
 
 void DylanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
 {
+#pragma HLS PIPELINE II=1
   for ( int i=0; i < OUT_OBJECT_COUNT; ++i) {
     ap_int<K> max = -1*(1<<(K-1)); // smallest 16-bit integer
     int maxj = -1;
@@ -98,21 +99,21 @@ void L2sort(ap_uint<M> data_in[NLINKS][NOBJ_PER_LINK], ap_uint<M> data_out[OUT_O
 
 #pragma HLS INTERFACE ap_none port=data_in
 #pragma HLS INTERFACE ap_none port=data_out
-#pragma HLS INTERFACE ap_none port=return
+  //#pragma HLS INTERFACE ap_none port=return
 
 #pragma HLS ARRAY_PARTITION variable=data_in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=data_out complete dim=0
-#pragma HLS PIPELINE II=20
+  //#pragma HLS PIPELINE II=20
   //#pragma HLS LATENCY min=19 max=19
 
-    ap_uint<64> data_tmp[INPUT_SORT_SIZE];
+    ap_uint<M> data_tmp[INPUT_SORT_SIZE];
 #pragma HLS ARRAY_PARTITION variable=data_tmp complete dim=0
 
     for ( int i=0; i < NLINKS; ++i) {
 #pragma HLS UNROLL
         for ( int io=0; io < NOBJ_PER_LINK; ++io) {
 #pragma HLS UNROLL
-	  data_tmp[i*NOBJ_PER_LINK+io] = data_in[i][io];
+	  data_tmp[i*N+io] = data_in[i][io];
         }
     }
     for ( int i=IN_OBJECT_COUNT; i < INPUT_SORT_SIZE; ++i) {

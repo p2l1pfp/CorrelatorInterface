@@ -1,9 +1,13 @@
-open_project -reset proj_justcsim
+open_project -reset proj
 
-set nLinks 10
-set nObjPerLink 18
-set inObjectCount 180
-set inputSortSize 256
+set nLinks 8 
+set nObjPerLink 16 
+set inObjectCount 128
+set inputSortSize 128 
+#set nLinks 10 
+#set nObjPerLink 18
+#set inObjectCount 180
+#set inputSortSize 256
 set outObjectCount 30
 
 set_top L2sort
