@@ -1,9 +1,15 @@
-open_project -reset proj
+open_project -reset proj_justcsim
+
+set nLinks 10
+set nObjPerLink 18
+set inObjectCount 180
+set inputSortSize 256
+set outObjectCount 30
 
 set_top L2sort
 
-add_files L2sort.cpp
-add_files -tb L2sort_tb.cpp
+add_files L2sort.cpp -cflags "-DINPUT_SORT_SIZE=${inputSortSize} -DIN_OBJECT_COUNT=${inObjectCount} -DOUT_OBJECT_COUNT=${outObjectCount} -DNLINKS=${nLinks} -DNOBJ_PER_LINK=${nObjPerLink}"
+add_files -tb L2sort_tb.cpp -cflags "-DINPUT_SORT_SIZE=${inputSortSize} -DIN_OBJECT_COUNT=${inObjectCount} -DOUT_OBJECT_COUNT=${outObjectCount} -DNLINKS=${nLinks} -DNOBJ_PER_LINK=${nObjPerLink}"
 
 open_solution -reset "solution1"
 
