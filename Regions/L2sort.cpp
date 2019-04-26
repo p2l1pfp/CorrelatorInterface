@@ -96,18 +96,59 @@ void DylanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJ
 
 void NhanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
 {
-#pragma HLS PIPELINE II=1
-  int i=0;
-  for( int j=0; j < IN_OBJECT_COUNT; ++j) {
-#pragma HLS UNROLL
-    ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
-    if (tmppt > 0) {
-      data_out[i] = data_tmp[j];
-      i++;
-    }
-    if (i>OUT_OBJECT_COUNT) break;  
-  }
+
+	#pragma HLS INTERFACE ap_none port=data_tmp
+	#pragma HLS INTERFACE ap_none port=data_out	
+	#pragma HLS ARRAY_PARTITION variable=data_tmp  complete dim=0
+	#pragma HLS ARRAY_PARTITION variable=data_out complete dim=0
+	#pragma HLS PIPELINE II=SORT_II
+
+	ap_int<8> in_index[OUT_OBJECT_COUNT]; 
+	#pragma HLS ARRAY_PARTITION variable=in_index  complete dim=0
+
+	for( int j=0; j < OUT_OBJECT_COUNT; ++j) {
+		in_index[j] = -1;
+	}	
+
+	int i=0;
+	for( int j=0; j < IN_OBJECT_COUNT; ++j) {
+	// #pragma HLS UNROLL
+		if (i>OUT_OBJECT_COUNT) continue;  		
+    	ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
+    	if (tmppt > 0) {
+      		// data_out[i] = data_tmp[j];
+      		in_index[i] = j;
+      		i++;
+    	}
+  	}	
+
+	for( int j=0; j < OUT_OBJECT_COUNT; ++j) {
+		data_out[j] = data_tmp[in_index[j]];
+	}
 }
+
+// void NhanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
+// {
+// 	#pragma HLS ARRAY_PARTITION variable=data_tmp  complete dim=0
+// 	#pragma HLS ARRAY_PARTITION variable=data_out complete dim=0
+// 	#pragma HLS PIPELINE II=SORT_II
+
+// 	// int in_index[OUT_OBJECT_COUNT]; 
+// 	// for( int j=0; j < IN_OBJECT_COUNT; ++j) {
+// 	// 	in_index[j] = -1;
+// 	// }	
+
+// 	int i=0;
+// 	for( int j=0; j < IN_OBJECT_COUNT; ++j) {
+// 	// #pragma HLS UNROLL
+// 		if (i>OUT_OBJECT_COUNT) continue;  		
+//     	ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
+//     	if (tmppt > 0) {
+//       		data_out[i] = data_tmp[j];
+//       	i++;
+//     	}
+//   	}	
+// }
 
 void L2sort(ap_uint<M> data_in[NLINKS][NOBJ_PER_LINK], ap_uint<M> data_out[OUT_OBJECT_COUNT])
 {
