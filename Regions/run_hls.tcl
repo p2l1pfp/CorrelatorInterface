@@ -7,7 +7,8 @@ open_project -reset proj_II1_obj180_nhansort
 set nLinks 10 
 set nObjPerLink 18
 set inObjectCount 180
-set inputSortSize 256
+#set inputSortSize 256
+set inputSortSize 180
 set outObjectCount 30
 
 set_top L2sort
@@ -17,6 +18,7 @@ add_files -tb L2sort_tb.cpp -cflags "-DINPUT_SORT_SIZE=${inputSortSize} -DIN_OBJ
 
 open_solution -reset "solution1"
 
+config_array_partition -maximum_size 32400
 set_part {xcvu9p-flgb2104-2-i}
 create_clock -period 320MHz -name default
 

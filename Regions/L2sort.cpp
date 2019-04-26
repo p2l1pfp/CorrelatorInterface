@@ -98,14 +98,49 @@ void NhanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJE
 {
 #pragma HLS PIPELINE II=1
   int i=0;
+  ap_uint<8> indices[OUT_OBJECT_COUNT];
+#pragma HLS ARRAY_PARTITION variable=indices complete
   for( int j=0; j < IN_OBJECT_COUNT; ++j) {
 #pragma HLS UNROLL
+    if (i>OUT_OBJECT_COUNT) continue;
     ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
     if (tmppt > 0) {
-      data_out[i] = data_tmp[j];
+      indices[i] = j;
       i++;
+    } 
+  }
+  for (int i=0; i < OUT_OBJECT_COUNT; ++i) {
+#pragma HLS UNROLL
+    data_out[i] = data_tmp[int(indices[i])];
+  }
+}
+
+void RyanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
+{
+#pragma HLS PIPELINE II=1
+  ap_uint<8> data_geq[IN_OBJECT_COUNT];
+#pragma HLS ARRAY_PARTITION variable=data_geq complete
+
+  for( int i=0; i < IN_OBJECT_COUNT; ++i) {
+#pragma HLS UNROLL
+    data_geq[i] = 0;
+    ap_int<K> tmppt_i = ap_int<K>(data_tmp[i].range(K-1,0));
+    for( int j=0; j < IN_OBJECT_COUNT; ++j) {
+#pragma HLS UNROLL
+      ap_int<K> tmppt_j = ap_int<K>(data_tmp[j].range(K-1,0));
+      if (tmppt_i >= tmppt_j) {
+	data_geq[i] += 1;
+      }
     }
-    if (i>OUT_OBJECT_COUNT) break;  
+  }
+  int j=0;
+  for( int i=0; i < IN_OBJECT_COUNT; ++i) {
+#pragma HLS UNROLL
+    if (data_geq[i]>(IN_OBJECT_COUNT-OUT_OBJECT_COUNT))  {
+      data_out[j] = data_tmp[i];
+      j++;
+    }
+    if (j>OUT_OBJECT_COUNT) break;
   }
 }
 
@@ -145,5 +180,6 @@ void L2sort(ap_uint<M> data_in[NLINKS][NOBJ_PER_LINK], ap_uint<M> data_out[OUT_O
 
     //DylanSort(data_tmp, data_out);
     NhanSort(data_tmp, data_out);
+    //RyanSort(data_tmp, data_out);
 
 }
