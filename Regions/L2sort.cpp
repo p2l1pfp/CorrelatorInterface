@@ -29,13 +29,16 @@ void elementLoop(array_t a[], index_t j, mask_t mask) {
   }
 }
 
-void BitonicSortOptimizedInline(ap_uint<M> work_array[INPUT_SORT_SIZE]) {
+void BitonicSort(ap_uint<M> work_array[INPUT_SORT_SIZE], ap_uint<M> data_out[OUT_OBJECT_COUNT]) {
     // HLS csynth says it can't meeting timing requirements if II<4 for N=16
     // HLS csynth says it can't meeting timing requirements if II<5 for N=32
     // HLS csynth says it can't meeting timing requirements if II<7 for N=64
     // HLS csynth says it can't meeting timing requirements if II<10 for N=128
-    #pragma HLS PIPELINE II=1
-    #pragma HLS ARRAY_PARTITION variable=work_array complete
+    //#pragma HLS INTERFACE ap_none port=work_array
+    //#pragma HLS INTERFACE ap_none port=data_out	
+    #pragma HLS ARRAY_PARTITION variable=work_array complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=data_out complete dim=0
+    #pragma HLS PIPELINE II=SORT_II
     int j = 0;
 
     LOOP2: for (j=1; j>0; j=j>>1) {
@@ -74,15 +77,22 @@ void BitonicSortOptimizedInline(ap_uint<M> work_array[INPUT_SORT_SIZE]) {
 #endif
 #endif
 #endif
+    
+    for ( int i=0; i < OUT_OBJECT_COUNT; ++i) {
+#pragma HLS UNROLL
+      data_out[i] = work_array[INPUT_SORT_SIZE-i-1];
+      }
+
+
 }
 
-void DylanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
+void DylanSort(ap_uint<M> data_tmp[INPUT_SORT_SIZE], ap_uint<M> data_out[OUT_OBJECT_COUNT])
 {
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=SORT_II
   for ( int i=0; i < OUT_OBJECT_COUNT; ++i) {
     ap_int<K> max = -1*(1<<(K-1)); // smallest 16-bit integer
     int maxj = -1;
-    for( int j=i; j < IN_OBJECT_COUNT; ++j)
+    for( int j=i; j < INPUT_SORT_SIZE; ++j)
       {
 #pragma HLS UNROLL
 	ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
@@ -94,23 +104,23 @@ void DylanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJ
   }
 }
 
-void NhanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
+void NhanSort(ap_uint<M> data_tmp[INPUT_SORT_SIZE], ap_uint<M> data_out[OUT_OBJECT_COUNT])
 {
-	#pragma HLS INTERFACE ap_none port=data_tmp
-	#pragma HLS INTERFACE ap_none port=data_out	
-	#pragma HLS ARRAY_PARTITION variable=data_tmp  complete dim=0
+  //#pragma HLS INTERFACE ap_none port=data_tmp
+  //#pragma HLS INTERFACE ap_none port=data_out	
+	#pragma HLS ARRAY_PARTITION variable=data_tmp complete dim=0
 	#pragma HLS ARRAY_PARTITION variable=data_out complete dim=0
 	#pragma HLS PIPELINE II=SORT_II
 
 	ap_int<8> in_index[OUT_OBJECT_COUNT]; 
-	#pragma HLS ARRAY_PARTITION variable=in_index  complete dim=0
+	#pragma HLS ARRAY_PARTITION variable=in_index complete dim=0
 
 	for( int j=0; j < OUT_OBJECT_COUNT; ++j) {
 		in_index[j] = -1;
 	}	
 
 	int i=0;
-	for( int j=0; j < IN_OBJECT_COUNT; ++j) {
+	for( int j=0; j < INPUT_SORT_SIZE; ++j) {
 	// #pragma HLS UNROLL
 		if (i>OUT_OBJECT_COUNT) continue;  		
     	ap_int<K> tmppt = ap_int<K>(data_tmp[j].range(K-1,0));
@@ -126,17 +136,17 @@ void NhanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJE
 	}
 }
 
-void RyanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJECT_COUNT])
+void RyanSort(ap_uint<M> data_tmp[INPUT_SORT_SIZE], ap_uint<M> data_out[OUT_OBJECT_COUNT])
 {
-#pragma HLS PIPELINE II=1
-  ap_uint<8> data_geq[IN_OBJECT_COUNT];
-#pragma HLS ARRAY_PARTITION variable=data_geq complete
+#pragma HLS PIPELINE II=SORT_II
+  ap_uint<8> data_geq[INPUT_SORT_SIZE];
+#pragma HLS ARRAY_PARTITION variable=data_geq complete dim=0
 
-  for( int i=0; i < IN_OBJECT_COUNT; ++i) {
+  for( int i=0; i < INPUT_SORT_SIZE; ++i) {
 #pragma HLS UNROLL
     data_geq[i] = 0;
     ap_int<K> tmppt_i = ap_int<K>(data_tmp[i].range(K-1,0));
-    for( int j=0; j < IN_OBJECT_COUNT; ++j) {
+    for( int j=0; j < INPUT_SORT_SIZE; ++j) {
 #pragma HLS UNROLL
       ap_int<K> tmppt_j = ap_int<K>(data_tmp[j].range(K-1,0));
       if (tmppt_i >= tmppt_j) {
@@ -145,9 +155,9 @@ void RyanSort(ap_uint<M> data_tmp[IN_OBJECT_COUNT], ap_uint<M> data_out[OUT_OBJE
     }
   }
   int j=0;
-  for( int i=0; i < IN_OBJECT_COUNT; ++i) {
+  for( int i=0; i < INPUT_SORT_SIZE; ++i) {
 #pragma HLS UNROLL
-    if (data_geq[i]>(IN_OBJECT_COUNT-OUT_OBJECT_COUNT))  {
+    if (data_geq[i]>(INPUT_SORT_SIZE-OUT_OBJECT_COUNT))  {
       data_out[j] = data_tmp[i];
       j++;
     }
@@ -160,12 +170,9 @@ void L2sort(ap_uint<M> data_in[NLINKS][NOBJ_PER_LINK], ap_uint<M> data_out[OUT_O
 
 #pragma HLS INTERFACE ap_none port=data_in
 #pragma HLS INTERFACE ap_none port=data_out
-  //#pragma HLS INTERFACE ap_none port=return
-
-#pragma HLS ARRAY_PARTITION variable=data_in  complete dim=0
+#pragma HLS ARRAY_PARTITION variable=data_in complete dim=0
 #pragma HLS ARRAY_PARTITION variable=data_out complete dim=0
-#pragma HLS PIPELINE II=1
-  //#pragma HLS LATENCY min=19 max=19
+#pragma HLS PIPELINE II=SORT_II
 
     ap_uint<M> data_tmp[INPUT_SORT_SIZE];
 #pragma HLS ARRAY_PARTITION variable=data_tmp complete dim=0
@@ -182,15 +189,8 @@ void L2sort(ap_uint<M> data_in[NLINKS][NOBJ_PER_LINK], ap_uint<M> data_out[OUT_O
       data_tmp[i] = 0;
     }
 
-    /*BitonicSortOptimizedInline(data_tmp);
-
-    for ( int i=0; i < OUT_OBJECT_COUNT; ++i) {
-#pragma HLS UNROLL
-      data_out[i] = data_tmp[INPUT_SORT_SIZE-i-1];
-      }*/
-
     //DylanSort(data_tmp, data_out);
+    //BitonicSort(data_tmp, data_out);
     NhanSort(data_tmp, data_out);
     //RyanSort(data_tmp, data_out);
-
 }
